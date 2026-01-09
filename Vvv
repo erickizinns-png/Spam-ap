@@ -1,0 +1,154 @@
+-- ap spammer WXV HUB (UI persistente)
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+local Net = game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Net")
+local ExecuteCommand = Net:FindFirstChild("RE/AdminPanelService/ExecuteCommand")
+
+-- GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "RayHubSpam"
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.ResetOnSpawn = false -- mantém a UI após reset
+
+local Frame = Instance.new("Frame")
+Frame.Parent = ScreenGui
+Frame.Size = UDim2.new(0,220,0,320)
+Frame.Position = UDim2.new(0.5,-110,0.5,-160)
+Frame.BackgroundColor3 = Color3.fromRGB(10,10,10)
+Frame.BackgroundTransparency = 0.2
+Frame.Active = true
+Frame.Draggable = true
+
+local FrameStroke = Instance.new("UIStroke")
+FrameStroke.Parent = Frame
+FrameStroke.Color = Color3.fromRGB(255,0,0)
+FrameStroke.Thickness = 3
+
+local UICorner = Instance.new("UICorner")
+UICorner.Parent = Frame
+UICorner.CornerRadius = UDim.new(0,12)
+
+-- Título
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Parent = Frame
+TitleLabel.Size = UDim2.new(1,0,0,32)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = " WXV HUB"
+TitleLabel.Font = Enum.Font.Arcade
+TitleLabel.TextColor3 = Color3.fromRGB(255,255,255)
+TitleLabel.TextSize = 18
+
+-- Scroll
+local ScrollingFrame = Instance.new("ScrollingFrame")
+ScrollingFrame.Parent = Frame
+ScrollingFrame.Position = UDim2.new(0,10,0,40)
+ScrollingFrame.Size = UDim2.new(1,-20,1,-45)
+ScrollingFrame.ScrollBarThickness = 6
+ScrollingFrame.BackgroundColor3 = Color3.fromRGB(15,0,0)
+ScrollingFrame.BackgroundTransparency = 0.15
+
+local ScrollStroke = Instance.new("UIStroke")
+ScrollStroke.Parent = ScrollingFrame
+ScrollStroke.Color = Color3.fromRGB(255,0,0)
+ScrollStroke.Thickness = 2
+
+local ScrollCorner = Instance.new("UICorner")
+ScrollCorner.Parent = ScrollingFrame
+ScrollCorner.CornerRadius = UDim.new(0,10)
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Parent = ScrollingFrame
+UIListLayout.Padding = UDim.new(0,6)
+
+UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	ScrollingFrame.CanvasSize = UDim2.new(0,0,0,UIListLayout.AbsoluteContentSize.Y+20)
+end)
+
+-- Função para criar botão de player
+local function CreatePlayerButton(player)
+	if player == LocalPlayer then return end
+
+	local Button = Instance.new("TextButton")
+	Button.Parent = ScrollingFrame
+	Button.Size = UDim2.new(1,-4,0,45)
+	Button.BackgroundColor3 = Color3.fromRGB(30,0,0)
+	Button.Text = ""
+	Button.AutoButtonColor = false
+
+	local Stroke = Instance.new("UIStroke")
+	Stroke.Parent = Button
+	Stroke.Color = Color3.fromRGB(255,0,0)
+	Stroke.Thickness = 2
+
+	local Corner = Instance.new("UICorner")
+	Corner.Parent = Button
+	Corner.CornerRadius = UDim.new(0,10)
+
+	-- Hover leve
+	local hover = TweenService:Create(Button, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(80,0,0)})
+	local normal = TweenService:Create(Button, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(30,0,0)})
+	Button.MouseEnter:Connect(function() hover:Play() end)
+	Button.MouseLeave:Connect(function() normal:Play() end)
+
+	-- Efeito de clique rápido (apenas flash vermelho)
+	local function ClickEffect()
+		local effect = Instance.new("Frame")
+		effect.Size = UDim2.new(1,0,1,0)
+		effect.Position = UDim2.new(0,0,0,0)
+		effect.BackgroundColor3 = Color3.fromRGB(255,0,0)
+		effect.BackgroundTransparency = 0.6
+		effect.BorderSizePixel = 0
+		effect.ZIndex = 10
+		effect.Parent = Button
+
+		local tween = TweenService:Create(effect, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundTransparency = 1})
+		tween:Play()
+		tween.Completed:Connect(function() effect:Destroy() end)
+	end
+
+	-- Nome do jogador
+	local NameLabel = Instance.new("TextLabel")
+	NameLabel.Parent = Button
+	NameLabel.Size = UDim2.new(1,-50,1,0)
+	NameLabel.Position = UDim2.new(0,45,0,0)
+	NameLabel.BackgroundTransparency = 1
+	NameLabel.Text = player.Name
+	NameLabel.TextColor3 = Color3.fromRGB(255,255,255) -- branco
+	NameLabel.Font = Enum.Font.Arcade
+	NameLabel.TextSize = 16
+	NameLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+	-- Clique apenas efeito
+	Button.MouseButton1Click:Connect(function()
+		ClickEffect()
+		for _, cmd in ipairs({"rocket","balloon","inverse","tiny","morph","jumpscare"}) do
+			ExecuteCommand:FireServer(player, cmd)
+		end
+	end)
+
+	Button.TouchTap:Connect(function()
+		ClickEffect()
+		for _, cmd in ipairs({"rocket","balloon","inverse","tiny","morph","jumpscare"}) do
+			ExecuteCommand:FireServer(player, cmd)
+		end
+	end)
+end
+
+-- Atualiza lista de players
+local function RefreshPlayers()
+	for _, v in ipairs(ScrollingFrame:GetChildren()) do
+		if v:IsA("TextButton") then
+			v:Destroy()
+		end
+	end
+	for _, p in ipairs(Players:GetPlayers()) do
+		CreatePlayerButton(p)
+	end
+end
+
+-- Init
+RefreshPlayers()
+Players.PlayerAdded:Connect(function() task.wait(0.2) RefreshPlayers() end)
+Players.PlayerRemoving:Connect(function() task.wait(0.2) RefreshPlayers() end)
