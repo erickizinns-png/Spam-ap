@@ -1,3 +1,9 @@
+-- 1️⃣1️⃣ AP SPAMMER
+_G.WXV = _G.WXV or {}
+_G.WXV.AP_SPAMMER = _G.WXV.AP_SPAMMER or false
+if not _G.WXV.AP_SPAMMER then return end
+
+-- Código do AP SPAMMER aqui
 -- ap spammer WXV HUB (UI persistente)
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
